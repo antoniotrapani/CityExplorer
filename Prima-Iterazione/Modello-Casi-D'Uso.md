@@ -32,10 +32,11 @@ Gli attori individuati sono:
 | Utente non registrato, Utente registrato | Calcolare l'itinerario migliore per spostarsi tra due punti della città a partire da un certo orario, secondo un criterio scelto | UC3: Pianificazione itinerario |
 | Amministratore | Inserire una nuova fermata alla rete | UC4: Inserimento fermate |
 | Amministratore | Eliminare una fermata alla rete | UC5: Eliminazione fermate |
-| Amministratore | Inserire una linea, con il tipo di mezzo e la sequenza ordinata di fermate per ciascuna direzione | UC5: Inserimento linea |
-| Amministratore | Eliminare una linea, dato il nome | UC6: Eliminazione linea |
-| Amministratore | Inserire le corse di una linea | UC7: Inserimento corse |
-| Amministratore | Eliminare le corse di una linea | UC8: Eliminazione corse |
-| Amministratore | Inserire luoghi noti utilizzabili nella ricerca | UC9: Inserimento luoghi noti |
-| Amministratore | Eliminare luoghi noti utilizzabili nella ricerca | UC10: Eliminazione luoghi noti |
-| Amministratore, Utente Registrato, Utente non registrato | Visualizzare le informazioni complessive della rete: visualizza l'intera mappa con  fermate, linee e corse presenti nel sistema | UC11: Visualizzazione rete di trasporto |
+| Amministratore | Inserire una linea, con il tipo di mezzo e la sequenza ordinata di fermate per ciascuna direzione | UC6: Inserimento linea |
+| Amministratore | Eliminare una linea, dato il nome | UC7: Eliminazione linea |
+| Amministratore | Inserire le corse di una linea | UC8: Inserimento corse |
+| Amministratore | Eliminare le corse di una linea | UC9: Eliminazione corse |
+| Amministratore | Inserire luoghi noti utilizzabili nella ricerca | UC10: Inserimento luoghi noti |
+| Amministratore | Eliminare luoghi noti utilizzabili nella ricerca | UC11: Eliminazione luoghi noti |
+| Amministratore, Utente Registrato, Utente non registrato | Visualizzare le informazioni complessive della rete: visualizza l'intera mappa con  fermate, linee e corse presenti nel sistema | UC12: Visualizza mappa
+
