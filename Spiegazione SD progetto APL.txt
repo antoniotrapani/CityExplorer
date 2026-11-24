@@ -1,0 +1,196 @@
+SD1:
+TODO: quando ho successo creo l'utente con tutte le collections che ha vuote
+l'inserimento restituisce un codice di successo o errore
+
+SD2:
+il B-tree restituisce lo user
+utente gestisce tutto la conferma della password
+
+SD3 PianificaItinerario:
+L'utente ha già fatto l'accesso e lo conosciamo, tutte le sue collections sono già inizializzate. Il sistema gestisce la mappa che verrà usata 
+dalla nuova richiesta per cercare gli itinerari
+
+viene creata una nuova richiestaViaggio e la mette nella lista (serve salvarcele se vuoi metterlo nei preferiti)
+mi salvo la richiesta e non l'itinerario dato che l'itinerario dipende dall'ora del giorno
+
+TODO: Il pianificatore è l'esperto del grafo e viene chiamato per fare gli itinerari. è un attributo del sistema e quindi sempre accessibile
+Il pianificatore restituisce tutti gli elementi per poter creare l'oggetto itinerario che viene creato da RichiestaViaggio
+
+Per l'algoritmo di creazione delgi itinerari il planner chiede alla mappa(grafo) quali sono le fermate vicine alla posizione della partenza 
+considerando anche la distanzaMaxPiedi. Da lì parte il CSA per trovare il percorso migliore
+La stessa cosa la chiede per vedere le fermate vicine alla destinazione. Questo avviene prima di fare qualsiasi calcolo
+Dopo avere le fermate di partenza e quelle di arrivo, dato che abbiamo i nodi del grafo possiamo visitare benissimo tutte le fermate adiacenti
+
+Quando ricostruisco le tratte devi stare attento se sono tratte con un mezzo (in questo caso devi mettere le fermate di inizio e arrivo),
+oppure tratte a piedi dove devi mettere posizione di inzio e fine
+Le tratte le metto in una struttura che inserisce sempre in testa così leggo in modo ordinato (quindi una pila con puntatori)
+
+
+TODO?: se vogliamo fare routing per andare a piedi bisogna fare una seconda mappa specifica per i pedoni e usare algoritmi di instradamento come A*(Questo lo facciamo molto dopo)
+
+SD4:
+
+gli passo nome e posizione della fermata
+
+TODO: il sistema contatta il controller della rete passando la richiesta
+
+Prima vedo se la fermata già esiste(la ricerca CREA un codice in base a nome e verifica se esiste già in tabella) e poi la creo in caso
+Sto salvando la fermata in una tabella hash dato che mi serve dividere la creazione di una fermata con l'aggiunta a una nuova linea
+in questo modo le fermate le salvo sia sulla tabella hash che sul grafo(aggiungo una fermata al grafo solo quando la voglio collegare a una linea)
+
+
+
+SD5 aggiungiFermataALinea:
+
+gli passo il codice della fermata, la direzione e il numero d'ordine della fermata precedente(devo inserire la nuova fermata subito dopo)
+
+TODO: il sistema contatta il controller della rete passando la richiesta
+
+Prima vedo se la fermata esiste cercandola nell'hash dandogli il codice,
+devo vedere anche se la fermata precedente fa parte della linea cercandola da percorso linea,
+
+poi cerco la linea specifica dentro l'albero rosso-nero(meglio di un'hash dato che avrò la stampa ordinata, la ricerca è più lenta di un hash ma trattiamo
+dati piccoli quindi non mi importa più di tanto, l'inserimento è lentuccio ma lo faccio meno volte della stampa quindi va bene)
+
+Linea poi cerca dentro il vettore specifico di puntatori a fermate accedendo direttamente all'indice e inserisce in mezzo facendo uno shift completo
+(mi piace di più il vettore che la lista dato che il vettore ha un accesso veloce e accedo di più rispetto che aggiungere, poi non ho bisogno di farli lunghi
+
+
+SD6 CreaCorsa:
+
+do' per scontato che conosco già la linea (ho fatto cerca linea), che ho eliminato le corse precendenti se sto facendo modifica, e che ho il calendario fatto
+
+Creo una nuova corsa a partire da un percorso linea specifico (lo uso in loop quando ho una modifica alla linea (tipo una nuova fermata) per tutte le corse
+di quella linea in un nuovo caso d'uso) 
+
+Ogni volta che aggiungo una fermata a una linea è meglio ricreare il grafo da zero dato che se aggiungo tante fermate di fila faccio solo una ricostruzione
+del corsa e quindi del grafo.
+quando creo una nuova corsa rendo invalido il grafo quindi imposto un flag a falso (pattern: observer per quelli che lo stanno usando)
+
+Preferisco ricreare il grafo da zero rispetto a modificare localmente i nodi perché lo sto implementando come un vettore e quindi per aggiungere qualcosa
+in mezzo devo fare uno shift e quindi ho un costo O(n)
+Se lo ricreo da zero ho comunque un costo O(n) quindi faccio così (potevo implementare con un albero rosso-nero ma la ricerca sarebbe peggio e mi serve
+di più rispetto all'aggiunta) è anche più semplice ricrearlo da zero.
+
+gli passo il nome della linea, la direzione, il codice del calendario(gestito dal sistema con un hash per codice), gli orari per ogni fermata(array)
+
+forwardo la richiesta al controller di rete
+cerco il calendario dal codice
+poi passo la richiesta alla linea
+poi dal percorso linea creo la corsa passando nel costruttore il calendario, gli orari delle fermate e il vettore dei puntatori a fermata di direzione linea
+corsa, nel suo costruttore, crea i passaggi passando al costruttore di passaggio la fermata e gli orari di arrivo e partenza. questo fatto in loop per 
+ogni fermata della corsa
+poi percorso linea aggiunge la corsa al suo array ordinato temporalmente (ci serve per costruire il grafo)
+alla fine di tutto il sistema invalida il grafo
+
+
+
+SD7 importaReteDaFile:
+
+TODO:ho bisogno di una classe esperto che fa il parsing dal file.
+Se ho errori in mezzo per qualsiasi cosa ritorno allo stato di prima
+
+Mi creo una rete da zero e alla fine cancello quella vecchia
+
+do' per scontato che sono amministratore
+
+in ingresso passo la cartella GTFS da sistemare
+
+il sistema crea un Importatore GTFS e gli passa la cartella da scannerizzare
+poi l'importatore crea una nuova rete
+
+le operazioni di lettura le faccio usando pattern template quindi creo diversi lettori a cui passo una stringa per dire in cosa sono 
+specializzati e la struttura di contesto per leggere ogni pezzo di cartella e ogni lettore crea le classi specifiche
+i lettori sono in ordine: calendari e eccezioni relative, fermate, linee, corse e passaggi
+ogni lettore ha il suo file per cui è specializzato file
+
+
+l'adapter chiama i lettori e gli dice di leggere il file che gli passa
+
+per coordinare i lettori ho bisogno di un contesto di importazione dove dentro ho la rete e tutte le caratteristiche messe come hash table così ho i 
+riferimenti specifici (esempio: cerco dentro la tabella delle fermate usando come chiave una linea così trovo le fermate di quella linea subito)
+un lettore per eseguire vede se i passaggi precedenti sono finiti dalla struttura del contesto e poi esegue
+
+se ho un errore cancello tutto e ripristino la rete precedente, altrimenti la cancello per interezza e sostituisco la mia di rete
+
+alla fine di tutto chiamo il visitatore che una serie di controlli finali sulla nuova rete per controllare se va bene oppure no, 
+poi la salvo(lo fa il sistema) al posto di quella vecchia e infine la rendo invalida così costringo tutti gli osservatori a ricaricarla
+
+
+
+SD8 visualizzaLinee:
+
+creo un visitatore da bash(dopo sarà l'interfaccia grafica) specializzato per visitare le linee
+passo al sistema il visitatore chiamando il metodo accettaVisita del sistema
+il visitatore ha un metodo visita che a seconda di come è stato creato mi fa entrare più o meno in profondità nella rete
+in loop finché trovo un falso per ogni oggetto del sistema faccio un controllo se lo posso visitare eseguendo visita(visitatore)
+allora faccio tutti i suoi get
+
+in questo caso quando chiamo visita di linee va tutto bene e poi linea stessa fa visita di percorso linea che restituisce falso per costruzione del visitatore
+allora il visitatore si ferma
+
+questo SD va ripetuto uguale per ogni visualizza
+
+SD9:
+PER UNA DIREZIONE DI LINEA VISITIAMO OGNI FERMATA E PER OGNI FERMATA VISITIAMO LA CORSA CHE CI PASSA E L'ORA IN CUI CI PASSA QUELLA CORSA, QUINDI VISITO
+LINEA PER LINEA
+creo una tabella che mi serve per stampare
+
+uso il visitatore scendendo il più profondo possibile per raccogliere informazioni e riempire la tabella per poi stamparla. 
+Visita tutta la rete
+alla fine
+
+creo il tipo di visitatore per la stampaoraria, scendi è true perché devo visitare le strutture sotto
+
+
+SD10 Esporta itinerario:
+
+sappiamo già l'utente che fornisce l'itinerario
+
+creo un nuovo visitatore apposta per esportare l'itinerario in geoJSON, passandogli l'itinerario
+
+
+SD eliminaFermata:
+
+TODO: definisci come togliere le associazioni
+
+col visitatore vedi tutto il sistema per capire se ci sono associazioni legate alla fermata specifica
+
+il grafo ha solo i puntatori alle fermate quindi devo eliminare solo la fermata dalla hash table del controller
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
