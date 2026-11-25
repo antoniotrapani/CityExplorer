@@ -28,7 +28,7 @@ Le tratte le metto in una struttura che inserisce sempre in testa così leggo in
 
 TODO?: se vogliamo fare routing per andare a piedi bisogna fare una seconda mappa specifica per i pedoni e usare algoritmi di instradamento come A*(Questo lo facciamo molto dopo)
 
-SD4:
+SD4 creaFermata:
 
 gli passo nome e posizione della fermata
 
@@ -38,23 +38,25 @@ Prima vedo se la fermata già esiste(la ricerca CREA un codice in base a nome e 
 Sto salvando la fermata in una tabella hash dato che mi serve dividere la creazione di una fermata con l'aggiunta a una nuova linea
 in questo modo le fermate le salvo sia sulla tabella hash che sul grafo(aggiungo una fermata al grafo solo quando la voglio collegare a una linea)
 
-
+alla fine devo invalidare il grafo
 
 SD5 aggiungiFermataALinea:
 
-gli passo il codice della fermata, la direzione e il numero d'ordine della fermata precedente(devo inserire la nuova fermata subito dopo)
+gli passo il codice della fermata, la direzione e il numero d'ordine della fermata precedente(devo inserire la nuova fermata subito dopo), il tempo che ci 
+vuole ad andare alla nuova fermata e il tempo che ci vuole per passare dalla nuova fermata a quella dopo
 
 TODO: il sistema contatta il controller della rete passando la richiesta
 
 Prima vedo se la fermata esiste cercandola nell'hash dandogli il codice,
 devo vedere anche se la fermata precedente fa parte della linea cercandola da percorso linea,
 
-poi cerco la linea specifica dentro l'albero rosso-nero(meglio di un'hash dato che avrò la stampa ordinata, la ricerca è più lenta di un hash ma trattiamo
+poi cerco la linea specifica dentro l'albero rosso-nero(RB-tree)(meglio di un'hash dato che avrò la stampa ordinata, la ricerca è più lenta di un hash ma trattiamo
 dati piccoli quindi non mi importa più di tanto, l'inserimento è lentuccio ma lo faccio meno volte della stampa quindi va bene)
 
 Linea poi cerca dentro il vettore specifico di puntatori a fermate accedendo direttamente all'indice e inserisce in mezzo facendo uno shift completo
 (mi piace di più il vettore che la lista dato che il vettore ha un accesso veloce e accedo di più rispetto che aggiungere, poi non ho bisogno di farli lunghi
 
+alla fine devo invalidare il grafo dato che ora sarà diverso
 
 SD6 CreaCorsa:
 
@@ -150,13 +152,109 @@ sappiamo già l'utente che fornisce l'itinerario
 creo un nuovo visitatore apposta per esportare l'itinerario in geoJSON, passandogli l'itinerario
 
 
-SD eliminaFermata:
+SD 11 rimuoviFermataPercorso:
 
-TODO: definisci come togliere le associazioni
+gli passo il codice della linea, la direzione e il codice fermata
+Non posso farlo se lascio il percorso con meno di 2 fermate in totale
 
-col visitatore vedi tutto il sistema per capire se ci sono associazioni legate alla fermata specifica
+per ogni percorso linea che usa quella fermata, per ogni corsa elimino il passaggio che ha quella fermata,
+non cambio gli orari dato che stiamo supponendo che faccio comunque lo stesso tragitto
+
+forwardo la richiesta al controller della rete e che prende la linea dal suo RB-tree che controlla quante fermate ha il suo percorso e ritorna errore se ne
+ha meno di 2 (questo lo fai in una passata per tutto l'array e controlli pure se c'è la fermata specifica) e elimina la fermata
+
+poi sempre da percorso linea per ogni corsa dentro l'array di corse devo eliminare il passaggio di quella fermata specifica
+
+
+SD 12 eliminaFermata:
+
+Se la fermata è in uso il sistema restituisce  il percorso linea che la usa così puoi dissociarla, diamo per assodato che non esiste uno scenario dove
+ho un passaggio di una linea associato alla fermata e la linea non lo è.
+
+prima devo dissociarla da ogni percorso linea e quindi devo cambiare anche le corse
+TODO: definisci come togliere le associazioni della fermata
+
+tolgo anche dalla tabella hash del controller di rete
+
+cerco per vedere se la fermata è associata a dei percorsi linea e in caso mi stampa quelli a cui è associata (non uso un contatore su fermata
+dato che se non posso cancellare subito la ricerca la faccio lo stesso)
+Se è già collegata raccolgo tuttu i percorsi che la collegano in una lista (non mi interessa l'ordine) che creo io e poi chiedo all'amministratore
+se va bene cancellarla da tutti i percorsi e se dice si allora chiamo rimuoviFermataPercorso per ogni percorso prima di eliminare la fermata dalla hash table
 
 il grafo ha solo i puntatori alle fermate quindi devo eliminare solo la fermata dalla hash table del controller
+
+
+SD 12.1 confermaEliminazioneFermata:
+
+il continuo di prima, chiamo eliminaFermataPercorso per ogni percorso dentro la lista, poi elimino la fermata dalla hash table di fermate del controller rete 
+
+conosco già il codice fermata perché se lo salva il controller rete ( o il sistema)
+
+
+
+SD 13 eliminaCorsa:
+
+TODO: definisci come togliere le associazioni
+TODO: ogni corsa mantiene i passaggi in un vettore dato che al massimo sono quanto il numero di fermate di quel percorso linea
+
+
+Devo eliminare dato il percorso linea dal suo vettore di corse compreso di tutti i passaggi di quella corsa dato che una corsa ha sempre tutti i passaggi
+per ogni fermata della corsa
+l'eliminazione è ordinata e fatta in mezzo quindi magari è costosino
+
+
+SD 14 eliminaPercorsoLinea:
+
+do' per scontato che l'amministratore vuole cancellare sicuramente tutte le corse di quel percorso
+
+devo prima chiamo eliminaCorsa su tutte le sue corse e poi il percorso 
+
+la elimino pure attraverso linea
+
+
+SD eliminaLinea:
+
+devo eliminare prima i percorsi linea e quindi le corse e i passaggi
+se elimino linea devo eliminarlo pure dall'RB-tree di linee
+
+SD eliminaCaldendario:
+
+devo eliminarlo dalle corse che lo utilizzano prima
+TODO: definisci come cambiare calendario per delle corse
+
+lo tolgo dalle hash dei calendari
+
+
+SD modificaCalendario:
+
+
+SD creaCalendario:
+
+SD gestisciLuoghi:
+
+SD gestisciPreferiti:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
